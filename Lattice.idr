@@ -1,9 +1,10 @@
-module Lattice
+module Lattice 
 
 import Data.SortedSet
 import Data.SortedMap
 
 --- l is the type of the lattice elements,
+public export
 interface Lattice l where
   lub : l -> l -> l 
   glb : l -> l -> l
@@ -11,12 +12,23 @@ interface Lattice l where
   bottom : l
 
 
-interface Enumeratable a where 
+public export 
+interface (Ord a, Eq a) => Enumeratable a where 
   toList : List a
+  indexOf : a -> Nat
+
+  implementation Eq a where
+    x == y = (indexOf x) == (indexOf y)
+
+  implementation Ord a where
+    compare x y = compare (indexOf x) (indexOf y)
+
+
 --------------------------------------------------
 --- Flat lattice
 --------------------------------------------------
 
+public export
 data Flat : Type -> Type where
   MkFlat : (Eq a) => a -> Flat a
   FlatTop : Flat a
@@ -81,18 +93,4 @@ implementation (Enumeratable k, Ord k, Lattice v) => Lattice (Map k v) where
   top = SortedMap.fromList $ map (flip MkPair top) toList 
   bottom = SortedMap.fromList $ map (flip MkPair bottom) toList
 
---------------------------------------------------
----- Sign lattice
---------------------------------------------------
-
-data Sign = Plus | Minus | Zero
-
-implementation Eq Sign where
-  (==) Plus Plus = True
-  (==) Minus Minus = True
-  (==) Zero Zero = True
-  (==) _ _ = False
-
-SignLattice : Type 
-SignLattice = Flat Sign
 
